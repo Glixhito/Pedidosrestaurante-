@@ -47,13 +47,14 @@ export default function CheckoutPage() {
     try {
       setLoading(true)
       
-      // 🥩 AQUÍ ESTÁ EL CAMBIO CLAVE PARA ENVIAR EL PRODUCTO Y SU PORCIÓN AL BACKEND
+      // 🥩 PAYLOAD CORREGIDO: Mapeando porción y adiciones correctamente
       const datos = {
         ...formData,
         carrito: items.map(item => ({
           producto_id: item.producto_id || item.id,
-          ...(item.producto_porcion_id ? { producto_porcion_id: item.producto_porcion_id } : {}),
-          cantidad: item.cantidad
+          porcion_id: item.porcion ? item.porcion.id : null,
+          cantidad: item.cantidad,
+          adiciones: item.adiciones ? item.adiciones.map(ad => ({ id: ad.id, precio: ad.precio })) : []
         })),
       }
       
@@ -62,7 +63,7 @@ export default function CheckoutPage() {
       limpiarCarrito()
       
       if (formData.pago.metodo === 'NEQUI') {
-        const telefonoAdmin = '573159276048'; // ⚠️ Pon tu número aquí
+        const telefonoAdmin = '573159276048'; // ⚠️ Tu número de WhatsApp
         
         let texto = `*¡Hola! Acabo de hacer un pedido (#${pedidoCreado.numero_pedido})* 🍔\n\n`;
         texto += `👤 *Cliente:* ${formData.cliente.nombre}\n`;
@@ -114,13 +115,12 @@ export default function CheckoutPage() {
           <input type="tel" placeholder="Teléfono / WhatsApp" required value={formData.cliente.telefono} onChange={(e) => setFormData(prev => ({ ...prev, cliente: { ...prev.cliente, telefono: e.target.value } }))} className="w-full bg-[#1a1209] border border-[#3a2a18] rounded-xl px-4 py-3.5 text-sm text-[#f5ead8] placeholder-[#9c8a6e]/50 focus:outline-none focus:border-[#e8621a] focus:ring-1 focus:ring-[#e8621a] transition-all" />
         </div>
 
-        {/* DATOS DE ENTREGA LIMPIOS */}
+        {/* DATOS DE ENTREGA */}
         <div className="bg-[#231a0d] border border-[#3a2a18] rounded-3xl p-6 space-y-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
           <h2 className="font-serif font-bold text-sm text-[#f0a030] flex items-center gap-2 uppercase tracking-wider"><MapPin size={16} /> Datos de Entrega</h2>
           <input type="text" placeholder="Dirección completa (Ej: Calle 1 # 2-3)" required value={formData.entrega.direccion} onChange={(e) => setFormData(prev => ({ ...prev, entrega: { ...prev.entrega, direccion: e.target.value } }))} className="w-full bg-[#1a1209] border border-[#3a2a18] rounded-xl px-4 py-3.5 text-sm text-[#f5ead8] placeholder-[#9c8a6e]/50 focus:outline-none focus:border-[#e8621a] focus:ring-1 focus:ring-[#e8621a] transition-all" />
           <input type="text" placeholder="Referencia (Ej: Casa roja de dos pisos)" value={formData.entrega.referencia} onChange={(e) => setFormData(prev => ({ ...prev, entrega: { ...prev.entrega, referencia: e.target.value } }))} className="w-full bg-[#1a1209] border border-[#3a2a18] rounded-xl px-4 py-3.5 text-sm text-[#f5ead8] placeholder-[#9c8a6e]/50 focus:outline-none focus:border-[#e8621a] focus:ring-1 focus:ring-[#e8621a] transition-all" />
           
-          {/* 🔥 AVISO DE PAGO DE DOMICILIO EN CASA */}
           <div className="bg-[#1a1209] border border-[#e8621a]/30 p-4 rounded-2xl flex items-start gap-3 shadow-inner mt-4">
             <span className="text-[#e8621a] text-xl font-bold mt-0.5">🛵</span>
             <div>
@@ -146,7 +146,6 @@ export default function CheckoutPage() {
             </label>
           ))}
 
-          {/* ÁREA DE QR */}
           {formData.pago.metodo === 'NEQUI' && (
             <div className="mt-6 p-5 bg-[#140e06]/80 backdrop-blur-sm border border-[#e8621a]/30 rounded-2xl flex flex-col items-center shadow-[0_0_20px_rgba(232,98,26,0.1)] animate-fade-in">
               <div className="w-full mb-5 space-y-3 text-left">

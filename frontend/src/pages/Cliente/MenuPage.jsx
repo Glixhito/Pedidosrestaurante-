@@ -97,12 +97,26 @@ export default function MenuPage() {
       })
 
   const openDetail = (item) => {
-    setSelectedItem(item)
+    // 🛡️ MODIFICACIÓN CLAVE AQUÍ: Blindamos las adiciones
+    // Si el backend no envió adiciones para este plato, ponemos unas de prueba.
+    const adicionesParaMostrar = (item.adiciones && item.adiciones.length > 0)
+      ? item.adiciones
+      : [
+          { id: 991, nombre: 'Queso Extra (Falta en BD)', precio: 2500 },
+          { id: 992, nombre: 'Tocino (Falta en BD)', precio: 3000 }
+        ];
+
+    const itemConAdiciones = {
+      ...item,
+      adiciones: adicionesParaMostrar
+    };
+
+    setSelectedItem(itemConAdiciones)
     setModalQty(1)
     setAdicionesSeleccionadas([]) // 🧹 Limpiar adiciones al abrir un plato nuevo
     
-    if (item.porciones && item.porciones.length > 0) {
-      setPorcionSeleccionada(item.porciones[0])
+    if (itemConAdiciones.porciones && itemConAdiciones.porciones.length > 0) {
+      setPorcionSeleccionada(itemConAdiciones.porciones[0])
     } else {
       setPorcionSeleccionada(null)
     }
