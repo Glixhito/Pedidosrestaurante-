@@ -28,7 +28,7 @@ export default function MenuPage() {
   const [selectedItem, setSelectedItem] = useState(null)
   const [modalQty, setModalQty] = useState(1)
   const [porcionSeleccionada, setPorcionSeleccionada] = useState(null)
-  const [adicionesSeleccionadas, setAdicionesSeleccionadas] = useState([]) // 🧀 Nuevo estado para toppings
+  const [adicionesSeleccionadas, setAdicionesSeleccionadas] = useState([])
 
   const { agregarProducto, obtenerCantidadTotal, obtenerSubtotal } = useCarritoStore()
 
@@ -99,7 +99,7 @@ export default function MenuPage() {
   const openDetail = (item) => {
     setSelectedItem(item)
     setModalQty(1)
-    setAdicionesSeleccionadas([]) // 🧹 Limpiar adiciones al abrir un plato nuevo
+    setAdicionesSeleccionadas([])
     
     if (item.porciones && item.porciones.length > 0) {
       setPorcionSeleccionada(item.porciones[0])
@@ -115,7 +115,6 @@ export default function MenuPage() {
     setAdicionesSeleccionadas([])
   }
 
-  // 🧀 Función para marcar/desmarcar una adición
   const toggleAdicion = (adicion) => {
     setAdicionesSeleccionadas(prev => {
       const existe = prev.find(a => a.id === adicion.id);
@@ -133,13 +132,11 @@ export default function MenuPage() {
         alert('Por favor selecciona un gramaje')
         return
       }
-      // 🚀 Ahora enviamos 4 cosas: producto, porcion, ADICIONES y cantidad
       agregarProducto(selectedItem, porcionSeleccionada, adicionesSeleccionadas, modalQty)
       closeDetail()
     }
   }
 
-  // 💰 Cálculo Dinámico de Precios
   const precioBaseModal = selectedItem 
     ? (porcionSeleccionada ? Number(porcionSeleccionada.precio) : Number(selectedItem.precio))
     : 0;
@@ -152,7 +149,7 @@ export default function MenuPage() {
   return (
     <div className="min-h-screen bg-[#1a1209] text-[#f5ead8] font-sans relative pb-28">
       
-      {/* HEADER ADAPTATIVO */}
+      {/* ============ HEADER ADAPTATIVO ============ */}
       <div className="sticky top-0 z-30 bg-[#1a1209]/95 backdrop-blur border-b border-[#3a2a18] px-6 py-4 flex justify-between items-center max-w-7xl mx-auto shadow-md">
         <div>
           <span className="text-xs text-[#f0a030] uppercase tracking-widest font-bold">Asadero Parrilla</span>
@@ -182,7 +179,7 @@ export default function MenuPage() {
 
       <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
         
-        {/* HERO BANNER ADAPTATIVO */}
+        {/* ============ HERO BANNER ============ */}
         <div className="relative rounded-3xl overflow-hidden border border-[#3a2a18] bg-[#231a0d] h-56 md:h-72 shadow-2xl">
           <img 
             src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&h=600&fit=crop&auto=format" 
@@ -198,7 +195,7 @@ export default function MenuPage() {
           </div>
         </div>
 
-        {/* TABS DE CATEGORÍAS */}
+        {/* ============ TABS DE CATEGORÍAS ============ */}
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
           <button
             onClick={() => setCategoriaActual('todos')}
@@ -226,7 +223,7 @@ export default function MenuPage() {
           ))}
         </div>
 
-        {/* CUADRÍCULA DE PLATOS */}
+        {/* ============ GRID DE PRODUCTOS (MEJORADO) ============ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           
           {productosFiltrados.length === 0 ? (
@@ -238,39 +235,98 @@ export default function MenuPage() {
           ) : (
             productosFiltrados.map(producto => {
               const tienePorciones = producto.porciones && producto.porciones.length > 0;
-              const precioDisplay = tienePorciones 
-                ? `Desde ${formatearPrecio(Math.min(...producto.porciones.map(p => p.precio)))}`
-                : formatearPrecio(producto.precio);
+              const precioMin = tienePorciones 
+                ? Math.min(...producto.porciones.map(p => p.precio))
+                : Number(producto.precio);
+              
+              const badge = tienePorciones 
+                ? { text: 'Varias porciones', color: 'bg-blue-500/20 text-blue-300 border-blue-500/30' }
+                : { text: 'Disponible', color: 'bg-green-500/20 text-green-300 border-green-500/30' };
 
               return (
                 <div 
                   key={producto.id}
                   onClick={() => openDetail(producto)}
-                  className="bg-[#231a0d] border border-[#3a2a18] rounded-3xl overflow-hidden cursor-pointer hover:border-[#e8621a]/60 transition group flex flex-col justify-between shadow-lg relative"
+                  className="bg-[#231a0d] border border-[#3a2a18] rounded-2xl overflow-hidden cursor-pointer hover:border-[#e8621a] transition-all duration-300 group flex flex-col shadow-lg hover:shadow-[0_8px_32px_rgba(232,98,26,0.2)] transform hover:-translate-y-1"
                 >
-                  <div className="relative h-48 overflow-hidden bg-[#1a1209]">
+                  {/* ========== IMAGEN CON OVERLAY ========== */}
+                  <div className="relative h-56 overflow-hidden bg-[#1a1209]">
                     <img
                       src={producto.imagen_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=700&h=500&fit=crop&auto=format"}
                       alt={producto.nombre}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                     />
-                    <span className="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-[#f0a030] font-bold text-xs px-3 py-1.5 rounded-full border border-white/10 shadow-xl">
-                      {precioDisplay}
-                    </span>
-                  </div>
-
-                  <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
-                    <div>
-                      <h3 className="font-serif font-bold text-base text-[#f5ead8] group-hover:text-[#e8621a] transition">{producto.nombre}</h3>
-                      <p className="text-xs text-[#9c8a6e] line-clamp-2 mt-1 leading-relaxed">{producto.descripcion || 'Especialidad de la casa al carbón.'}</p>
+                    
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60 group-hover:via-black/40 transition duration-300" />
+                    
+                    {/* Badges en esquina superior derecha */}
+                    <div className="absolute top-3 right-3 flex flex-col gap-2">
+                      <div className="bg-[#e8621a] text-white font-bold text-sm px-3 py-1.5 rounded-lg shadow-lg backdrop-blur-sm border border-orange-400/50">
+                        {tienePorciones ? 'Desde ' : ''}{formatearPrecio(precioMin)}
+                      </div>
+                      <div className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${badge.color} backdrop-blur-sm`}>
+                        {badge.text}
+                      </div>
                     </div>
 
-                    <div className="flex justify-between items-center pt-3 border-t border-[#3a2a18]">
-                      <span className="font-bold text-base text-[#f0a030]">{precioDisplay}</span>
-                      
-                      <span className="bg-[#2e2010] text-[#f5ead8] px-3.5 py-2 rounded-xl text-xs group-hover:bg-[#e8621a] group-hover:text-white group-hover:shadow-[0_0_12px_rgba(232,98,26,0.6)] transition-all duration-300 flex items-center gap-1.5 font-bold">
-                        <Plus size={16} /> Ver / Agregar
-                      </span>
+                    {/* CTA flotante en hover */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#1a1209] to-transparent opacity-0 group-hover:opacity-100 transition duration-300 transform translate-y-2 group-hover:translate-y-0">
+                      <button className="w-full bg-[#e8621a] hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 shadow-lg">
+                        <Plus size={16} /> Ver Detalles
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ========== CONTENIDO ========== */}
+                  <div className="p-5 flex flex-col flex-1 space-y-3">
+                    {/* Nombre y descripción */}
+                    <div>
+                      <h3 className="font-serif font-bold text-lg text-[#f5ead8] group-hover:text-[#f0a030] transition line-clamp-2">
+                        {producto.nombre}
+                      </h3>
+                      <p className="text-xs text-[#9c8a6e] line-clamp-2 mt-2 leading-relaxed">
+                        {producto.descripcion || 'Especialidad de la casa al carbón.'}
+                      </p>
+                    </div>
+
+                    {/* Características de porciones */}
+                    {tienePorciones && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {producto.porciones.slice(0, 2).map(p => (
+                          <span key={p.id} className="text-[10px] font-semibold bg-[#2e2010] text-[#f0a030] px-2 py-1 rounded border border-[#3a2a18]">
+                            {p.gramos}g
+                          </span>
+                        ))}
+                        {producto.porciones.length > 2 && (
+                          <span className="text-[10px] font-semibold bg-[#2e2010] text-[#9c8a6e] px-2 py-1 rounded border border-[#3a2a18]">
+                            +{producto.porciones.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Adiciones disponibles */}
+                    {producto.adiciones && producto.adiciones.length > 0 && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-amber-300/80">
+                        <span className="text-sm">🧀</span>
+                        <span className="font-medium">{producto.adiciones.length} adiciones disponibles</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ========== PIE ========== */}
+                  <div className="border-t border-[#3a2a18] p-4 flex items-center justify-between bg-[#1a1209]/50">
+                    <div>
+                      <p className="text-[10px] text-[#9c8a6e] uppercase font-bold tracking-wider">
+                        {tienePorciones ? 'Desde' : 'Precio'}
+                      </p>
+                      <p className="text-[#f0a030] font-serif font-bold text-base">
+                        {formatearPrecio(precioMin)}
+                      </p>
+                    </div>
+                    <div className="w-8 h-8 bg-[#e8621a] rounded-full flex items-center justify-center text-white group-hover:scale-110 group-hover:shadow-lg transition">
+                      <ChevronRight size={18} />
                     </div>
                   </div>
                 </div>
@@ -280,7 +336,7 @@ export default function MenuPage() {
         </div>
       </div>
 
-      {/* BARRA FLOTANTE INFERIOR DEL CARRITO */}
+      {/* ============ BARRA FLOTANTE CARRITO ============ */}
       {obtenerCantidadTotal() > 0 && (
         <div className="fixed bottom-6 left-4 right-4 max-w-md mx-auto z-40">
           <Link to="/carrito" className="bg-[#e8621a] text-white p-4 rounded-2xl flex justify-between items-center border border-orange-400 shadow-[0_10px_40px_rgba(232,98,26,0.35)] hover:bg-orange-600 hover:shadow-[0_10px_50px_rgba(232,98,26,0.5)] transition-all duration-300 transform hover:-translate-y-1">
@@ -298,11 +354,11 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* MODAL DE DETALLE Y SELECCIÓN (PORCIONES Y ADICIONES) */}
+      {/* ============ MODAL DE DETALLE (MEJORADO) ============ */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#231a0d] border border-[#3a2a18] w-full max-w-lg rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative animate-fade-in max-h-[90vh] overflow-y-auto">
-            <button onClick={closeDetail} className="absolute top-4 right-4 bg-[#2e2010] p-2.5 rounded-full text-[#9c8a6e] hover:text-white transition">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#231a0d] border border-[#3a2a18] w-full max-w-lg rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button onClick={closeDetail} className="absolute top-4 right-4 bg-[#2e2010] p-2.5 rounded-full text-[#9c8a6e] hover:text-white hover:bg-[#e8621a] transition-all">
               <X size={20} />
             </button>
 
@@ -317,61 +373,86 @@ export default function MenuPage() {
               <p className="text-xs md:text-sm text-[#9c8a6e] leading-relaxed mt-2">{selectedItem.descripcion || 'Preparado al carbón con los mejores cortes y sazón artesanal.'}</p>
             </div>
 
-            {/* 🥩 SELECTOR DE GRAMAJES */}
+            {/* ========== SELECTOR DE GRAMAJES (MEJORADO) ========== */}
             {selectedItem.porciones && selectedItem.porciones.length > 0 && (
-              <div className="space-y-2 bg-[#1a1209] p-4 rounded-2xl border border-[#3a2a18]">
-                <label className="text-xs font-bold text-[#f0a030] uppercase tracking-wider flex items-center gap-1.5">
-                  <Utensils size={14} /> Selecciona el gramaje / porción:
-                </label>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-3 bg-gradient-to-br from-[#1a1209] to-[#140e06] p-5 rounded-2xl border border-[#3a2a18] shadow-inner">
+                <div className="flex items-center gap-2 mb-3">
+                  <Utensils size={16} className="text-[#f0a030]" />
+                  <label className="text-xs font-bold text-[#f0a030] uppercase tracking-widest">
+                    Elige el Gramaje
+                  </label>
+                  <span className="ml-auto text-[11px] text-[#9c8a6e]">
+                    {selectedItem.porciones.length} opciones
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2.5">
                   {selectedItem.porciones.map((porcion) => (
                     <button
                       key={porcion.id}
                       type="button"
                       onClick={() => setPorcionSeleccionada(porcion)}
-                      className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex flex-col items-center gap-1 ${
+                      className={`py-3.5 px-3 rounded-xl text-xs font-bold border-2 transition-all duration-200 flex flex-col items-center gap-1.5 transform ${
                         porcionSeleccionada?.id === porcion.id
-                          ? 'bg-[#e8621a] text-white border-[#e8621a] shadow-sm'
-                          : 'bg-[#231a0d] text-[#9c8a6e] border-[#3a2a18] hover:text-[#f5ead8]'
+                          ? 'bg-[#e8621a] text-white border-[#e8621a] shadow-[0_0_16px_rgba(232,98,26,0.4)] scale-105'
+                          : 'bg-[#231a0d] text-[#9c8a6e] border-[#3a2a18] hover:border-[#e8621a]/60 hover:bg-[#2e2010]'
                       }`}
                     >
-                      <span className="text-sm font-extrabold">{porcion.gramos}g</span>
-                      <span className="text-[11px] opacity-90">{formatearPrecio(porcion.precio)}</span>
+                      <span className="text-sm font-extrabold">{porcion.gramos}</span>
+                      <span className="text-[10px] opacity-90 font-semibold">
+                        {formatearPrecio(porcion.precio)}
+                      </span>
+                      {porcionSeleccionada?.id === porcion.id && (
+                        <Check size={12} className="mt-0.5" />
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* 🧀 SELECTOR DE ADICIONES / TOPPINGS */}
+            {/* ========== SELECTOR DE ADICIONES (MEJORADO) ========== */}
             {selectedItem.adiciones && selectedItem.adiciones.length > 0 && (
-              <div className="space-y-3 bg-[#1a1209] p-4 rounded-2xl border border-[#3a2a18]">
-                <label className="text-xs font-bold text-[#f0a030] uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="text-sm">🧀</span> ¿Deseas agregar adiciones?
-                </label>
-                <div className="grid grid-cols-1 gap-2">
+              <div className="space-y-3 bg-gradient-to-br from-[#1a1209] to-[#140e06] p-5 rounded-2xl border border-[#3a2a18] shadow-inner">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">🧀</span>
+                  <label className="text-xs font-bold text-[#f0a030] uppercase tracking-widest">
+                    Personaliza tu Orden
+                  </label>
+                  <span className="ml-auto text-[11px] text-[#9c8a6e]">
+                    {adicionesSeleccionadas.length} seleccionadas
+                  </span>
+                </div>
+                
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
                   {selectedItem.adiciones.map((adicion) => {
                     const seleccionada = adicionesSeleccionadas.some(a => a.id === adicion.id);
                     return (
                       <label
                         key={adicion.id}
                         onClick={() => toggleAdicion(adicion)}
-                        className={`flex justify-between items-center p-3 rounded-xl border cursor-pointer transition-all ${
+                        className={`flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150 transform ${
                           seleccionada
-                            ? 'bg-[#e8621a]/10 border-[#e8621a] text-[#f5ead8]'
-                            : 'bg-[#231a0d] border-[#3a2a18] text-[#9c8a6e] hover:border-[#e8621a]/50 hover:bg-[#2e2010]'
+                            ? 'bg-[#e8621a]/15 border-[#e8621a] shadow-[0_0_12px_rgba(232,98,26,0.2)]'
+                            : 'bg-[#231a0d] border-[#3a2a18] hover:border-[#e8621a]/40 hover:bg-[#2e2010]'
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-                            seleccionada ? 'bg-[#e8621a] border-[#e8621a]' : 'border-[#9c8a6e]/50 bg-[#1a1209]'
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                            seleccionada 
+                              ? 'bg-[#e8621a] border-[#e8621a] shadow-sm' 
+                              : 'border-[#9c8a6e]/30 bg-[#1a1209]'
                           }`}>
-                            {seleccionada && <Check size={14} className="text-white" />}
+                            {seleccionada && <Check size={14} className="text-white font-bold" />}
                           </div>
-                          <span className="font-semibold text-sm">{adicion.nombre}</span>
+                          <span className={`text-sm font-semibold transition-colors ${
+                            seleccionada ? 'text-[#f5ead8]' : 'text-[#9c8a6e]'
+                          }`}>
+                            {adicion.nombre}
+                          </span>
                         </div>
                         <span className="text-xs font-bold text-[#f0a030]">
-                          + {formatearPrecio(adicion.precio)}
+                          +{formatearPrecio(adicion.precio)}
                         </span>
                       </label>
                     )
@@ -388,11 +469,11 @@ export default function MenuPage() {
             <div className="flex justify-between items-center">
               <span className="text-sm font-semibold text-[#f5ead8]">Cantidad</span>
               <div className="flex items-center gap-4 bg-[#1a1209] border border-[#3a2a18] px-4 py-2 rounded-xl shadow-inner">
-                <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} className="text-[#9c8a6e] hover:text-white transition">
+                <button onClick={() => setModalQty(Math.max(1, modalQty - 1))} className="text-[#9c8a6e] hover:text-[#e8621a] transition">
                   <Minus size={18} />
                 </button>
                 <span className="font-bold text-base w-6 text-center">{modalQty}</span>
-                <button onClick={() => setModalQty(modalQty + 1)} className="text-[#9c8a6e] hover:text-white transition">
+                <button onClick={() => setModalQty(modalQty + 1)} className="text-[#9c8a6e] hover:text-[#e8621a] transition">
                   <Plus size={18} />
                 </button>
               </div>
@@ -400,7 +481,7 @@ export default function MenuPage() {
 
             <button
               onClick={addFromModal}
-              className="w-full bg-[#e8621a] hover:bg-orange-600 text-white font-serif font-bold py-4 rounded-2xl shadow-xl transition flex justify-between px-6 text-base"
+              className="w-full bg-[#e8621a] hover:bg-orange-600 text-white font-serif font-bold py-4 rounded-2xl shadow-xl transition flex justify-between px-6 text-base items-center transform hover:-translate-y-1 active:translate-y-0"
             >
               <span>Agregar al Pedido</span>
               <span>{formatearPrecio(precioUnitarioTotal * modalQty)}</span>
@@ -409,6 +490,36 @@ export default function MenuPage() {
         </div>
       )}
 
+      {/* ========== ESTILOS GLOBALES ========== */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #140e06;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #3a2a18;
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #e8621a;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   )
 }

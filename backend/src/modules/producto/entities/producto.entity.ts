@@ -1,17 +1,17 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-  OneToMany,
+import { 
+  Entity, 
+  PrimaryGeneratedColumn, 
+  Column, 
+  CreateDateColumn, 
+  UpdateDateColumn, 
+  ManyToOne, 
+  OneToMany, 
 } from 'typeorm';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
 import { Categoria } from '../../categoria/entities/categoria.entity';
 import { DetallePedido } from '../../pedido/entities/detalle-pedido.entity';
 import { ProductoPorcion } from './producto-porcion.entity'; 
-import { ProductoAdicion } from './producto-adicion.entity'; // ⬅️ IMPORTACIÓN
+import { ProductoAdicion } from './producto-adicion.entity';
 
 export enum EstadoProducto {
   ACTIVO = 'ACTIVO',
@@ -81,7 +81,7 @@ export class Producto {
   })
   porciones: ProductoPorcion[];
 
-  // 🧀 NUEVA RELACIÓN AGREGADA: Conecta el producto con sus adiciones/toppings
+  // 🧀 RELACIÓN DE ADICIONES / TOPPINGS
   @OneToMany(() => ProductoAdicion, (adicion) => adicion.producto, {
     cascade: true,
     eager: true,

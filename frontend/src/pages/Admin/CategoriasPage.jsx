@@ -82,8 +82,8 @@ export default function CategoriasPage() {
   return (
     <div className="space-y-6 text-[#f5ead8] animate-fade-in w-full max-w-7xl mx-auto px-2 sm:px-0">
       
-      {/* 📱 HEADER DE LA SECCIÓN ADAPTADO A MÓVIL */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-[#231a0d] border border-[#3a2a18] p-4 sm:p-5 rounded-2xl shadow-sm">
+      {/* ========== HEADER ========== */}
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-[#231a0d] border border-[#3a2a18] p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm">
         <div>
           <h1 className="text-xl sm:text-2xl font-serif font-bold flex items-center gap-2 text-[#f5ead8]">
             <FolderOpen className="text-[#e8621a] shrink-0" size={26} />
@@ -104,7 +104,7 @@ export default function CategoriasPage() {
         <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
       )}
 
-      {/* ESTADO VACÍO */}
+      {/* ========== ESTADO VACÍO ========== */}
       {categorias.length === 0 ? (
         <div className="bg-[#231a0d] border border-[#3a2a18] rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center shadow-sm">
           <div className="bg-[#1a1209] p-5 rounded-full mb-4 border border-[#3a2a18]">
@@ -112,39 +112,47 @@ export default function CategoriasPage() {
           </div>
           <h2 className="text-xl font-serif font-bold text-[#f5ead8] mb-2">Sin categorías</h2>
           <p className="text-[#9c8a6e] text-sm max-w-md">No tienes ninguna categoría registrada. Crea la primera para empezar a organizar tus productos.</p>
-          <button onClick={() => abrirModal()} className="mt-6 text-[#e8621a] font-bold hover:underline">
+          <button 
+            onClick={() => abrirModal()} 
+            className="mt-6 text-[#e8621a] font-bold hover:underline text-sm"
+          >
             + Crear mi primera categoría
           </button>
         </div>
       ) : (
-        /* 📱 GRID DE CATEGORÍAS RESPONSIVE (1 col en móvil, 2 en tablet, 3 en desktop) */
+        /* ========== GRID DE CATEGORÍAS ========== */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {categorias.map(cat => (
-            <div key={cat.id} className="bg-[#231a0d] border border-[#3a2a18] rounded-2xl p-4 sm:p-5 hover:border-[#e8621a]/50 transition-colors duration-300 shadow-md flex flex-col justify-between">
+            <div 
+              key={cat.id} 
+              className="bg-[#231a0d] border border-[#3a2a18] rounded-2xl p-5 hover:border-[#e8621a]/50 transition-all duration-300 shadow-md flex flex-col justify-between group"
+            >
               
               <div className="mb-6">
-                <div className="flex justify-between items-start gap-2 mb-2">
-                  <h3 className="text-base sm:text-lg font-serif font-bold text-[#f0a030] truncate">{cat.nombre}</h3>
-                  <span className="bg-[#1a1209] border border-[#3a2a18] text-[#9c8a6e] text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider shrink-0 shadow-inner">
+                <div className="flex justify-between items-start gap-2 mb-3">
+                  <h3 className="text-base sm:text-lg font-serif font-bold text-[#f0a030] truncate group-hover:text-orange-400 transition">
+                    {cat.nombre}
+                  </h3>
+                  <span className="bg-[#1a1209] border border-[#3a2a18] text-[#9c8a6e] text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0 shadow-inner group-hover:border-[#e8621a]/50 transition">
                     Orden: {cat.orden}
                   </span>
                 </div>
-                <p className="text-[#9c8a6e] text-xs sm:text-sm line-clamp-2 min-h-[36px]">
-                  {cat.descripcion || <span className="italic opacity-60">Sin descripción...</span>}
+                <p className="text-[#9c8a6e] text-xs sm:text-sm line-clamp-2 min-h-[36px] leading-relaxed">
+                  {cat.descripcion || <span className="italic opacity-50">Sin descripción...</span>}
                 </p>
               </div>
 
               <div className="flex gap-3 border-t border-[#3a2a18] pt-4">
                 <button
                   onClick={() => abrirModal(cat)}
-                  className="flex-1 bg-[#1a1209] hover:bg-[#2e2010] text-[#f5ead8] border border-[#3a2a18] py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-[#1a1209] hover:bg-[#2e2010] text-[#f5ead8] border border-[#3a2a18] hover:border-[#e8621a] py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-sm"
                 >
                   <Edit size={16} className="text-[#e8621a]" />
                   <span>Editar</span>
                 </button>
                 <button
                   onClick={() => eliminar(cat.id)}
-                  className="flex-1 bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/20 hover:border-red-600 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/20 hover:border-red-600 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-sm"
                 >
                   <Trash2 size={16} />
                   <span>Eliminar</span>
@@ -155,16 +163,18 @@ export default function CategoriasPage() {
         </div>
       )}
 
-      {/* MODAL CON ESTILO PREMIUM */}
+      {/* ========== MODAL ========== */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={editando ? 'Editar Categoría' : 'Nueva Categoría'}
       >
-        <form onSubmit={guardar} className="space-y-4 sm:space-y-5 mt-2">
+        <form onSubmit={guardar} className="space-y-4 sm:space-y-5 mt-4">
           
           <div className="space-y-1.5">
-            <label className="text-xs sm:text-sm font-semibold text-[#9c8a6e]">Nombre de la categoría <span className="text-[#e8621a]">*</span></label>
+            <label className="text-xs sm:text-sm font-semibold text-[#9c8a6e]">
+              Nombre de la categoría <span className="text-[#e8621a]">*</span>
+            </label>
             <input
               type="text"
               required
@@ -205,7 +215,10 @@ export default function CategoriasPage() {
             >
               Cancelar
             </button>
-            <button type="submit" className="flex-1 bg-[#e8621a] hover:bg-orange-600 text-white shadow-lg py-3 rounded-xl text-sm font-semibold transition-all">
+            <button 
+              type="submit" 
+              className="flex-1 bg-[#e8621a] hover:bg-orange-600 text-white shadow-lg py-3 rounded-xl text-sm font-semibold transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
+            >
               {editando ? 'Guardar Cambios' : 'Crear Categoría'}
             </button>
           </div>

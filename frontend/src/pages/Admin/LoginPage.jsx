@@ -35,11 +35,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#1a1209] text-[#f5ead8] font-sans flex items-center justify-center p-4">
       <div className="bg-[#231a0d] border border-[#3a2a18] rounded-3xl shadow-2xl p-8 w-full max-w-md relative overflow-hidden animate-fade-in">
         
-        {/* Barra superior decorativa al estilo fuego */}
+        {/* Barra decorativa superior */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 via-[#e8621a] to-orange-500"></div>
 
-        <div className="text-center mb-8 pt-2">
-          <div className="w-16 h-16 bg-[#1a1209] border border-[#3a2a18] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner text-[#e8621a]">
+        {/* CONTENIDO */}
+        <div className="text-center mb-8 pt-4">
+          <div className="w-16 h-16 bg-[#1a1209] border border-[#3a2a18] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner text-[#e8621a] group hover:border-[#e8621a] transition">
             <Flame size={32} />
           </div>
           <h2 className="text-2xl font-serif font-bold text-[#f5ead8]">Panel Administrativo</h2>
@@ -56,9 +57,12 @@ export default function LoginPage() {
           </div>
         )}
 
+        {/* FORMULARIO */}
         <form onSubmit={handleSubmit} className="space-y-5">
+          
+          {/* Email */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9c8a6e] mb-2 flex items-center gap-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9c8a6e] mb-2.5 flex items-center gap-1.5">
               <Mail size={14} /> Correo Electrónico
             </label>
             <input
@@ -71,8 +75,9 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* Contraseña */}
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9c8a6e] mb-2 flex items-center gap-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#9c8a6e] mb-2.5 flex items-center gap-1.5">
               <Lock size={14} /> Contraseña
             </label>
             <input
@@ -85,20 +90,22 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* Botón */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#e8621a] hover:bg-orange-600 text-white font-serif font-bold py-4 rounded-xl shadow-[0_5px_20px_rgba(232,98,26,0.3)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 mt-2"
+            className="w-full bg-[#e8621a] hover:bg-orange-600 text-white font-serif font-bold py-4 rounded-xl shadow-[0_5px_20px_rgba(232,98,26,0.3)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 active:translate-y-0 mt-2"
           >
             <LogIn size={20} />
             <span className="text-[15px]">{loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}</span>
           </button>
         </form>
 
-        <div className="mt-6 p-4 bg-[#1a1209] border border-[#3a2a18] rounded-2xl text-center">
+        {/* INFO DE CREDENCIALES */}
+        <div className="mt-6 p-4 bg-[#1a1209] border border-[#3a2a18] rounded-2xl text-center hover:border-[#e8621a]/50 transition">
           <p className="text-xs text-[#9c8a6e]">
             Credenciales de prueba: <br />
-            <strong className="text-[#f0a030] font-mono mt-1 inline-block">admin@restaurante.com / admin123</strong>
+            <strong className="text-[#f0a030] font-mono mt-1.5 inline-block tracking-wider">admin@restaurante.com / admin123</strong>
           </p>
         </div>
       </div>

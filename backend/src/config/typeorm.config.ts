@@ -4,6 +4,7 @@ import { Restaurante } from '../modules/restaurante/entities/restaurante.entity'
 import { Categoria } from '../modules/categoria/entities/categoria.entity';
 import { Producto } from '../modules/producto/entities/producto.entity';
 import { ProductoPorcion } from '../modules/producto/entities/producto-porcion.entity';
+import { ProductoAdicion } from '../modules/producto/entities/producto-adicion.entity'; // 🧀 1. IMPORTAR LA ENTIDAD AQUÍ
 import { ZonaDomicilio } from '../modules/zona-domicilio/entities/zona-domicilio.entity';
 import { Cliente } from '../modules/cliente/entities/cliente.entity';
 import { PagoQR } from '../modules/pago/entities/pago-qr.entity';
@@ -23,6 +24,7 @@ export const getTypeOrmConfig = (
     Categoria,
     Producto,
     ProductoPorcion,
+    ProductoAdicion, // 🧀 2. AGREGARLA AL ARREGLO GLOBAL DE ENTIDADES
     ZonaDomicilio,
     Cliente,
     PagoQR,      
