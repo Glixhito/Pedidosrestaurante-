@@ -47,14 +47,18 @@ export default function CheckoutPage() {
     try {
       setLoading(true)
       
-      // 🥩 PAYLOAD CORREGIDO: Mapeando porción y adiciones correctamente
+      // 🥩 PAYLOAD CORREGIDO Y ALINEADO CON EL DTO DEL BACKEND
       const datos = {
         ...formData,
         carrito: items.map(item => ({
           producto_id: item.producto_id || item.id,
-          porcion_id: item.porcion ? item.porcion.id : null,
+          producto_porcion_id: item.porcion_id || item.producto_porcion_id || (item.porcion ? item.porcion.id : null),
           cantidad: item.cantidad,
-          adiciones: item.adiciones ? item.adiciones.map(ad => ({ id: ad.id, precio: ad.precio })) : []
+          adiciones_seleccionadas: item.adiciones ? item.adiciones.map(ad => ({ 
+            id: ad.id || null, 
+            nombre: ad.nombre, 
+            precio: Number(ad.precio) || 0 
+          })) : []
         })),
       }
       
