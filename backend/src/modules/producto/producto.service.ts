@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Producto, EstadoProducto } from './entities/producto.entity';
 import { ProductoPorcion } from './entities/producto-porcion.entity';
-import { ProductoAdicion } from './entities/producto-adicion.entity'; // 👈 Nueva importación
+import { ProductoAdicion } from './entities/producto-adicion.entity';
 import { CreateProductoDto } from './dto/create-producto.dto';
 import { UpdateProductoDto } from './dto/update-producto.dto';
 import { ProductoGateway } from './producto.gateway';
@@ -19,7 +19,7 @@ export class ProductoService {
     private readonly productoRepository: Repository<Producto>,
     @InjectRepository(ProductoPorcion)
     private readonly porcionRepository: Repository<ProductoPorcion>,
-    @InjectRepository(ProductoAdicion) // 👈 Inyectamos el nuevo repositorio
+    @InjectRepository(ProductoAdicion)
     private readonly adicionRepository: Repository<ProductoAdicion>,
     private readonly productoGateway: ProductoGateway,
   ) {}
@@ -42,18 +42,48 @@ export class ProductoService {
       );
     }
 
+    // Extraemos porciones y adiciones del DTO
+    const { porciones, adiciones, ...restoDto } = dto as any;
+
+    // 1. Creamos y guardamos el producto base (con cast explícito a Producto)
     const producto = this.productoRepository.create({
-      ...dto,
+      ...restoDto,
       restaurante_id,
       disponible: true,
       estado: EstadoProducto.ACTIVO,
     });
 
-    const guardado = await this.productoRepository.save(producto);
-    
+    const productoGuardado: any = await this.productoRepository.save(producto);
+    const productoId = productoGuardado.id;
+
+    // 2. Guardar porciones si existen
+    if (porciones && Array.isArray(porciones) && porciones.length > 0) {
+      for (const pDto of porciones) {
+        const nuevaPorcion = this.porcionRepository.create({
+          productoId,
+          gramos: Number(pDto.gramos),
+          precio: Number(pDto.precio),
+        });
+        await this.porcionRepository.save(nuevaPorcion);
+      }
+    }
+
+    // 3. Guardar adiciones si existen 🧀
+    if (adiciones && Array.isArray(adiciones) && adiciones.length > 0) {
+      for (const aDto of adiciones) {
+        const nuevaAdicion = this.adicionRepository.create({
+          productoId,
+          nombre: aDto.nombre,
+          precio: Number(aDto.precio),
+        });
+        await this.adicionRepository.save(nuevaAdicion);
+      }
+    }
+
     this.productoGateway.notificarCambioMenu();
 
-    return guardado;
+    // 4. Retornamos el producto completo con sus relaciones cargadas
+    return await this.obtenerPorId(productoId, restaurante_id);
   }
 
   async obtenerPorRestaurante(
@@ -62,7 +92,7 @@ export class ProductoService {
   ): Promise<Producto[]> {
     const query = this.productoRepository.createQueryBuilder('p')
       .leftJoinAndSelect('p.porciones', 'porciones')
-      .leftJoinAndSelect('p.adiciones', 'adiciones') // 👈 Añadido a la consulta principal
+      .leftJoinAndSelect('p.adiciones', 'adiciones')
       .where('p.restaurante_id = :restaurante_id', { restaurante_id })
       .andWhere('p.deleted_at IS NULL');
 
@@ -87,7 +117,7 @@ export class ProductoService {
         estado: EstadoProducto.ACTIVO,
         deleted_at: IsNull(),
       },
-      relations: ['porciones', 'adiciones'], // 👈 Añadido a las relaciones
+      relations: ['porciones', 'adiciones'],
       order: { nombre: 'ASC' },
     });
   }
@@ -98,7 +128,7 @@ export class ProductoService {
   ): Promise<Producto> {
     const producto = await this.productoRepository.findOne({
       where: { id, restaurante_id, deleted_at: IsNull() },
-      relations: ['categoria', 'porciones', 'adiciones'], // 👈 Añadido a las relaciones
+      relations: ['categoria', 'porciones', 'adiciones'],
     });
 
     if (!producto) {
@@ -151,7 +181,7 @@ export class ProductoService {
       delete dto.porciones;
     }
 
-    // 3. Sincronización manual y segura de adiciones 🧀 (NUEVO)
+    // 3. Sincronización manual y segura de adiciones 🧀
     if (dto.adiciones) {
       const adicionesDto = dto.adiciones as any[];
       const adicionesActuales = await this.adicionRepository.find({ where: { productoId: id } });
