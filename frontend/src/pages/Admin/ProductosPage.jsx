@@ -5,6 +5,7 @@ import Loading from '../../components/shared/Loading'
 import Alert from '../../components/shared/Alert'
 import Modal from '../../components/shared/Modal'
 import { Edit, Trash2, Plus, Eye, EyeOff, UtensilsCrossed, Package, Trash, Upload, Image as ImageIcon } from 'lucide-react'
+
 export default function ProductosPage() {
   const [productos, setProductos] = useState([])
   const [categorias, setCategorias] = useState([])
@@ -25,7 +26,7 @@ export default function ProductosPage() {
     precio: '',
     imagen_url: '',
     porciones: [],
-    adiciones: [], // 👈 Añadido: estado inicial para adiciones/toppings
+    adiciones: [],
   })
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function ProductosPage() {
         precio: producto.precio !== null ? producto.precio : '',
         imagen_url: producto.imagen_url || '',
         porciones: producto.porciones ? [...producto.porciones] : [],
-        adiciones: producto.adiciones ? [...producto.adiciones] : [], // 👈 Cargar adiciones si existen
+        adiciones: producto.adiciones ? [...producto.adiciones] : [],
       })
       setPreview(producto.imagen_url || '')
     } else {
@@ -125,7 +126,6 @@ export default function ProductosPage() {
     setFormData({ ...formData, porciones: nuevasPorciones });
   }
 
-  // 🧀 Funciones para gestionar Adiciones / Toppings
   const agregarAdicion = () => {
     setFormData({
       ...formData,
@@ -154,24 +154,21 @@ export default function ProductosPage() {
         urlFinalImagen = await subirACloudinary(imagenFile)
       }
 
+      // 🛡️ AQUÍ ESTÁ EL FIX: Mapeo seguro directo, sin anular el arreglo
       const datosAEnviar = {
         ...formData,
         imagen_url: urlFinalImagen,
         precio: formData.precio !== '' ? parseFloat(formData.precio) : undefined,
-        porciones: formData.porciones.length > 0 
-          ? formData.porciones.map(p => ({
-              ...(p.id ? { id: p.id } : {}),
-              gramos: parseInt(p.gramos, 10),
-              precio: parseFloat(p.precio)
-            }))
-          : undefined,
-        adiciones: formData.adiciones.length > 0
-          ? formData.adiciones.map(a => ({
-              ...(a.id ? { id: a.id } : {}),
-              nombre: a.nombre,
-              precio: parseFloat(a.precio)
-            }))
-          : undefined
+        porciones: formData.porciones.map(p => ({
+          ...(p.id ? { id: p.id } : {}),
+          gramos: parseInt(p.gramos, 10) || 0,
+          precio: parseFloat(p.precio) || 0
+        })),
+        adiciones: formData.adiciones.map(a => ({
+          ...(a.id ? { id: a.id } : {}),
+          nombre: a.nombre,
+          precio: parseFloat(a.precio) || 0
+        }))
       }
 
       if (editando) {
