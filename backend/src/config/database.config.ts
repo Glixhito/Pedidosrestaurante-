@@ -46,6 +46,6 @@ export const AppDataSource = new DataSource({
     Administrador,
   ],
   migrations: ['src/migrations/*.ts'],
-  synchronize: !isProduction, // Evita sincronizaciones automáticas peligrosas en producción
+  synchronize: true, // Evita sincronizaciones automáticas peligrosas en producción
   logging: !isProduction,
 });
