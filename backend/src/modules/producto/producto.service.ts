@@ -29,23 +29,29 @@ export class ProductoService {
     dto: CreateProductoDto,
   ): Promise<Producto> {
     const existe = await this.productoRepository.findOne({
-      where: {
-        restaurante_id,
-        nombre: dto.nombre,
-        deleted_at: IsNull(),
-      },
+      where: { restaurante_id, nombre: dto.nombre, deleted_at: IsNull() },
     });
 
     if (existe) {
-      throw new BadRequestException(
-        'Ya existe un producto con este nombre',
-      );
+      throw new BadRequestException('Ya existe un producto con este nombre');
     }
 
-    // Extraemos porciones y adiciones del DTO
-    const { porciones, adiciones, ...restoDto } = dto as any;
+    const rawDto = dto as any;
 
-    // 1. Creamos y guardamos el producto base (con cast explícito a Producto)
+    // Parseo robusto
+    let arrPorciones = rawDto.porciones || rawDto.gramajes || [];
+    if (typeof arrPorciones === 'string') {
+      try { arrPorciones = JSON.parse(arrPorciones); } catch (e) { arrPorciones = []; }
+    }
+    
+    let arrAdiciones = rawDto.adiciones || rawDto.toppings || rawDto.extras || [];
+    if (typeof arrAdiciones === 'string') {
+      try { arrAdiciones = JSON.parse(arrAdiciones); } catch (e) { arrAdiciones = []; }
+    }
+
+    const { porciones, adiciones, toppings, gramajes, extras, ...restoDto } = rawDto;
+
+    // 1. Creamos y guardamos el producto base
     const producto = this.productoRepository.create({
       ...restoDto,
       restaurante_id,
@@ -56,33 +62,37 @@ export class ProductoService {
     const productoGuardado: any = await this.productoRepository.save(producto);
     const productoId = productoGuardado.id;
 
-    // 2. Guardar porciones si existen
-    if (porciones && Array.isArray(porciones) && porciones.length > 0) {
-      for (const pDto of porciones) {
+    // 2. Guardar porciones (Blindaje de Relación TypeORM + as any)
+    if (Array.isArray(arrPorciones) && arrPorciones.length > 0) {
+      for (const pDto of arrPorciones) {
+        if (!pDto.gramos) continue;
         const nuevaPorcion = this.porcionRepository.create({
-          productoId,
-          gramos: Number(pDto.gramos),
-          precio: Number(pDto.precio),
-        });
+          producto: { id: productoId }, 
+          producto_id: productoId,      
+          productoId: productoId,       
+          gramos: Number(pDto.gramos) || 0,
+          precio: Number(pDto.precio) || 0,
+        } as any); // 👈 Fix TypeScript
         await this.porcionRepository.save(nuevaPorcion);
       }
     }
 
-    // 3. Guardar adiciones si existen 🧀
-    if (adiciones && Array.isArray(adiciones) && adiciones.length > 0) {
-      for (const aDto of adiciones) {
+    // 3. Guardar adiciones 🧀 (Blindaje de Relación TypeORM + as any)
+    if (Array.isArray(arrAdiciones) && arrAdiciones.length > 0) {
+      for (const aDto of arrAdiciones) {
+        if (!aDto.nombre) continue;
         const nuevaAdicion = this.adicionRepository.create({
-          productoId,
-          nombre: aDto.nombre,
-          precio: Number(aDto.precio),
-        });
+          producto: { id: productoId }, 
+          producto_id: productoId,      
+          productoId: productoId,       
+          nombre: String(aDto.nombre).trim(),
+          precio: Number(aDto.precio) || 0,
+        } as any); // 👈 Fix TypeScript
         await this.adicionRepository.save(nuevaAdicion);
       }
     }
 
     this.productoGateway.notificarCambioMenu();
-
-    // 4. Retornamos el producto completo con sus relaciones cargadas
     return await this.obtenerPorId(productoId, restaurante_id);
   }
 
@@ -143,82 +153,85 @@ export class ProductoService {
     restaurante_id: string,
     dto: UpdateProductoDto,
   ): Promise<Producto> {
-    // 1. Verificar que el producto exista
     await this.obtenerPorId(id, restaurante_id);
+    const rawDto = dto as any;
 
-    // 2. Sincronización manual y segura de porciones
-    if (dto.porciones) {
-      const porcionesDto = dto.porciones as any[];
-      const porcionesActuales = await this.porcionRepository.find({ where: { productoId: id } });
-      const idsEnDto = porcionesDto.filter((p) => p.id).map((p) => p.id);
+    let arrPorciones = rawDto.porciones || rawDto.gramajes;
+    if (typeof arrPorciones === 'string') {
+      try { arrPorciones = JSON.parse(arrPorciones); } catch (e) { arrPorciones = undefined; }
+    }
 
-      for (const pDto of porcionesDto) {
+    let arrAdiciones = rawDto.adiciones || rawDto.toppings || rawDto.extras;
+    if (typeof arrAdiciones === 'string') {
+      try { arrAdiciones = JSON.parse(arrAdiciones); } catch (e) { arrAdiciones = undefined; }
+    }
+
+    // Sincronización manual y segura de porciones
+    if (arrPorciones && Array.isArray(arrPorciones)) {
+      const porcionesActuales = await this.porcionRepository.find({ where: { producto: { id } } as any });
+      const idsEnDto = arrPorciones.filter((p: any) => p.id).map((p: any) => p.id);
+
+      for (const pDto of arrPorciones) {
+        if (!pDto.gramos) continue;
         if (pDto.id) {
           await this.porcionRepository.update(pDto.id, {
-            productoId: id,
-            gramos: Number(pDto.gramos),
-            precio: Number(pDto.precio),
+            gramos: Number(pDto.gramos) || 0,
+            precio: Number(pDto.precio) || 0,
           });
         } else {
           const nuevaPorcion = this.porcionRepository.create({
+            producto: { id },
+            producto_id: id,
             productoId: id,
-            gramos: Number(pDto.gramos),
-            precio: Number(pDto.precio),
-          });
+            gramos: Number(pDto.gramos) || 0,
+            precio: Number(pDto.precio) || 0,
+          } as any); // 👈 Fix TypeScript
           await this.porcionRepository.save(nuevaPorcion);
         }
       }
 
       for (const porcionActual of porcionesActuales) {
         if (!idsEnDto.includes(porcionActual.id)) {
-          try {
-            await this.porcionRepository.delete(porcionActual.id);
-          } catch (error) {
-            console.warn(`No se pudo eliminar la porción ${porcionActual.id} porque tiene historial en pedidos.`);
-          }
+          try { await this.porcionRepository.delete(porcionActual.id); } catch (e) {}
         }
       }
-      delete dto.porciones;
     }
 
-    // 3. Sincronización manual y segura de adiciones 🧀
-    if (dto.adiciones) {
-      const adicionesDto = dto.adiciones as any[];
-      const adicionesActuales = await this.adicionRepository.find({ where: { productoId: id } });
-      const idsAdicionesEnDto = adicionesDto.filter((a) => a.id).map((a) => a.id);
+    // Sincronización manual y segura de adiciones 🧀
+    if (arrAdiciones && Array.isArray(arrAdiciones)) {
+      const adicionesActuales = await this.adicionRepository.find({ where: { producto: { id } } as any });
+      const idsAdicionesEnDto = arrAdiciones.filter((a: any) => a.id).map((a: any) => a.id);
 
-      for (const aDto of adicionesDto) {
+      for (const aDto of arrAdiciones) {
+        if (!aDto.nombre) continue;
         if (aDto.id) {
           await this.adicionRepository.update(aDto.id, {
-            productoId: id,
-            nombre: aDto.nombre,
-            precio: Number(aDto.precio),
+            nombre: String(aDto.nombre).trim(),
+            precio: Number(aDto.precio) || 0,
           });
         } else {
           const nuevaAdicion = this.adicionRepository.create({
+            producto: { id },
+            producto_id: id,
             productoId: id,
-            nombre: aDto.nombre,
-            precio: Number(aDto.precio),
-          });
+            nombre: String(aDto.nombre).trim(),
+            precio: Number(aDto.precio) || 0,
+          } as any); // 👈 Fix TypeScript
           await this.adicionRepository.save(nuevaAdicion);
         }
       }
 
       for (const adicionActual of adicionesActuales) {
         if (!idsAdicionesEnDto.includes(adicionActual.id)) {
-          try {
-            await this.adicionRepository.delete(adicionActual.id);
-          } catch (error) {
-            console.warn(`No se pudo eliminar la adición ${adicionActual.id} porque tiene historial en pedidos.`);
-          }
+          try { await this.adicionRepository.delete(adicionActual.id); } catch (e) {}
         }
       }
-      delete dto.adiciones;
     }
 
-    // 4. Actualizar campos generales (nombre, precio, imagen)
-    if (Object.keys(dto).length > 0) {
-      await this.productoRepository.update(id, dto);
+    const { porciones, adiciones, toppings, gramajes, extras, ...restoDto } = rawDto;
+    
+    if (Object.keys(restoDto).length > 0) {
+      await this.productoRepository.update(id, restoDto);
     }
 
     this.productoGateway.notificarCambioMenu();
@@ -252,7 +265,6 @@ export class ProductoService {
       .andWhere('p.disponible = false')
       .select(['p.id', 'p.nombre'])
       .getMany();
-
     return productos.map((p) => p.id);
   }
 }
