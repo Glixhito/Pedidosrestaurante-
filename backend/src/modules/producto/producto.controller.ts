@@ -8,6 +8,8 @@ import {
   Param,
   UseGuards,
   Query,
+  ParseBoolPipe,
+  SetMetadata,
 } from '@nestjs/common';
 import { ProductoService } from './producto.service';
 import { CreateProductoDto } from './dto/create-producto.dto';
@@ -15,84 +17,98 @@ import { UpdateProductoDto } from './dto/update-producto.dto';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
+// Decorador para omitir autenticación en caso de habilitar guards globales
+export const Public = () => SetMetadata('isPublic', true);
+
 @Controller('productos')
 export class ProductoController {
+  private readonly defaultRestauranteId =
+    process.env.RESTAURANTE_ID || '9c9a269e-b09a-4c34-ad76-af2fe86ca62c';
+
   constructor(private readonly productoService: ProductoService) {}
 
+  // 🔓 RUTA PÚBLICA: Menú principal para clientes
+  @Public()
   @Get('menu')
-  async obtenerMenu() {
-    // ID real de tu base de datos
-    const restaurante_id = process.env.RESTAURANTE_ID || '9c9a269e-b09a-4c34-ad76-af2fe86ca62c';
-    return await this.productoService.obtenerPorRestaurante(restaurante_id, true);
-  }
-
-  @Get('categoria/:categoria_id')
-  async obtenerPorCategoria(
-    @Param('categoria_id') categoria_id: string,
-  ) {
-    // ID real de tu base de datos
-    const restaurante_id = process.env.RESTAURANTE_ID || '9c9a269e-b09a-4c34-ad76-af2fe86ca62c';
-    return await this.productoService.obtenerPorCategoria(
-      categoria_id,
-      restaurante_id,
+  obtenerMenu() {
+    return this.productoService.obtenerPorRestaurante(
+      this.defaultRestauranteId,
+      true,
     );
   }
 
+  // 🔓 RUTA PÚBLICA: Filtrado por categoría
+  @Public()
+  @Get('categoria/:categoria_id')
+  obtenerPorCategoria(@Param('categoria_id') categoria_id: string) {
+    return this.productoService.obtenerPorCategoria(
+      categoria_id,
+      this.defaultRestauranteId,
+    );
+  }
+
+  // 🔐 RUTA PROTEGIDA: Crear producto
   @Post()
   @UseGuards(JwtGuard)
-  async crear(
+  crear(
     @Body() dto: CreateProductoDto,
     @CurrentUser('restaurante_id') restaurante_id: string,
   ) {
-    return await this.productoService.crear(restaurante_id, dto);
+    return this.productoService.crear(restaurante_id, dto);
   }
 
+  // 🔐 RUTA PROTEGIDA: Panel de administración
   @Get('admin')
   @UseGuards(JwtGuard)
-  async obtenerTodos(
+  obtenerTodos(
     @CurrentUser('restaurante_id') restaurante_id: string,
-    @Query('activos') activos: boolean = false,
+    @Query('activos', new ParseBoolPipe({ optional: true }))
+    activos?: boolean,
   ) {
-    return await this.productoService.obtenerPorRestaurante(
+    return this.productoService.obtenerPorRestaurante(
       restaurante_id,
-      activos,
+      activos ?? false,
     );
   }
 
+  // 🔐 RUTA PROTEGIDA: Consultar por ID
   @Get(':id')
   @UseGuards(JwtGuard)
-  async obtenerPorId(
+  obtenerPorId(
     @Param('id') id: string,
     @CurrentUser('restaurante_id') restaurante_id: string,
   ) {
-    return await this.productoService.obtenerPorId(id, restaurante_id);
+    return this.productoService.obtenerPorId(id, restaurante_id);
   }
 
+  // 🔐 RUTA PROTEGIDA: Actualización completa
   @Put(':id')
   @UseGuards(JwtGuard)
-  async actualizar(
+  actualizar(
     @Param('id') id: string,
     @Body() dto: UpdateProductoDto,
     @CurrentUser('restaurante_id') restaurante_id: string,
   ) {
-    return await this.productoService.actualizar(id, restaurante_id, dto);
+    return this.productoService.actualizar(id, restaurante_id, dto);
   }
 
+  // 🔐 RUTA PROTEGIDA: Cambiar estado (activo/inactivo)
   @Put(':id/disponibilidad')
   @UseGuards(JwtGuard)
-  async toggleDisponibilidad(
+  toggleDisponibilidad(
     @Param('id') id: string,
     @CurrentUser('restaurante_id') restaurante_id: string,
   ) {
-    return await this.productoService.toggleDisponibilidad(id, restaurante_id);
+    return this.productoService.toggleDisponibilidad(id, restaurante_id);
   }
 
+  // 🔐 RUTA PROTEGIDA: Eliminar producto
   @Delete(':id')
   @UseGuards(JwtGuard)
-  async retirar(
+  retirar(
     @Param('id') id: string,
     @CurrentUser('restaurante_id') restaurante_id: string,
   ) {
-    return await this.productoService.retirar(id, restaurante_id);
+    return this.productoService.retirar(id, restaurante_id);
   }
 }
