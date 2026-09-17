@@ -20,7 +20,7 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:5173', // Puerto típico de Vite (cámbialo si usas otro en local)
     process.env.FRONTEND_URL, // Esta variable la crearemos en Render más adelante
-  ].filter(Boolean); // Filtra valores indefinidos
+  ].filter(Boolean) as string[]; // Filtra valores indefinidos
 
   app.enableCors({
     origin: allowedOrigins,
