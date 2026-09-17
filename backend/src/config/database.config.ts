@@ -18,11 +18,12 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
-  ...(process.env.DATABASE_URL
+  // Solo usamos url si estamos en producción; en local usamos las variables individuales de Docker
+  ...(isProduction && process.env.DATABASE_URL
     ? {
         url: process.env.DATABASE_URL,
         ssl: {
-          rejectUnauthorized: false, // Necesario para conexiones seguras en la nube como Layerbase
+          rejectUnauthorized: false,
         },
       }
     : {
@@ -46,6 +47,6 @@ export const AppDataSource = new DataSource({
     Administrador,
   ],
   migrations: ['src/migrations/*.ts'],
-  synchronize: true, // Evita sincronizaciones automáticas peligrosas en producción
+  synchronize: true, // Creará las tablas automáticamente en tu Docker local
   logging: !isProduction,
 });
