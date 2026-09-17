@@ -1,57 +1,42 @@
-// 🇨🇴 Forzar zona horaria de Colombia en todo el servidor
+// 🇨🇴 Forzar zona horaria de Colombia en Vercel
 process.env.TZ = 'America/Bogota';
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import helmet from 'helmet';
-import { AppModule } from './app.module';
+import { AppModule } from '../src/app.module';
 
-async function bootstrap() {
-  // 🚨 { rawBody: true } es vital para que la firma del Webhook de Nequi funcione
-  const app = await NestFactory.create(AppModule, { rawBody: true });
-  const configService = app.get(ConfigService);
+let app: any;
 
-  // Seguridad
-  app.use(helmet());
+export default async function handler(req: any, res: any) {
+  if (!app) {
+    app = await NestFactory.create(AppModule, { rawBody: true });
 
-  // CORS nativo optimizado para aceptar cualquier preview de Vercel y desarrollo local
-  app.enableCors({
-    origin: (origin, callback) => {
-      // Permitir solicitudes sin origen (como Postman o apps móviles)
-      if (!origin) {
-        return callback(null, true);
-      }
+    // Habilitar CORS para permitir solicitudes desde Render y Vercel
+    app.enableCors({
+      origin: true,
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: true,
+    });
 
-      const frontendUrl = configService.get('FRONTEND_URL');
-      
-      // Permitir si es localhost, cualquier subdominio de Vercel, o la URL de producción exacta
-      const isAllowed = 
-        origin.includes('localhost') || 
-        origin.endsWith('.vercel.app') || 
-        (frontendUrl && origin === frontendUrl);
+    // PIPES DE VALIDACIÓN GLOBAL
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: false,
+        transform: true,
+      }),
+    );
 
-      if (isAllowed) {
-        callback(null, true);
-      } else {
-        callback(new Error('Bloqueado por la política CORS'));
-      }
-    },
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
-  });
+    await app.init();
+  }
 
-  // Validación global
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: false,
-      transform: true,
-    }),
-  );
+  const instance = app.getHttpAdapter().getInstance();
+  
+  // 🔄 REESCRITURA DE RUTA PARA CONTROLADORES CON PREFIX 'api/'
+  // Permite responder a peticiones que vienen como /auth/login o /api/auth/login
+  if (req.url.startsWith('/auth') || req.url.startsWith('/categoria') || req.url.startsWith('/producto')) {
+    req.url = `/api${req.url}`;
+  }
 
-  const port = process.env.PORT || 4000;
-  await app.listen(port);
-  console.log(`\n🚀 Servidor ejecutándose en puerto ${port} (Hora sincronizada: Colombia)`);
+  instance(req, res);
 }
-bootstrap();
