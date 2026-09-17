@@ -14,7 +14,7 @@ import { UpdateCategoriaDto } from './dto/update-categoria.dto';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
-@Controller('api/categorias')
+@Controller('categorias')
 export class CategoriaController {
   constructor(private readonly categoriaService: CategoriaService) {}
 

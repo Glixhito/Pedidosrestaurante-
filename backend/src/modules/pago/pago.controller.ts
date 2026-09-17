@@ -16,7 +16,7 @@ import { PedidoService } from '../pedido/pedido.service';
 import { WebhookSignatureGuard } from './guards/webhook-signature.guard';
 import { TipoPagoQR } from './entities/pago-qr.entity';
 
-@Controller('api/pagos')
+@Controller('pagos')
 export class PagoController {
   constructor(
     private pagoQRService: PagoQRService,

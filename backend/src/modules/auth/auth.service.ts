@@ -20,7 +20,6 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<{ access_token: string }> {
-    // Verificar si email ya existe
     const existe = await this.adminRepository.findOne({
       where: { email: dto.email },
     });
@@ -29,10 +28,8 @@ export class AuthService {
       throw new ConflictException('El email ya está registrado');
     }
 
-    // Hash de contraseña
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    // Crear administrador
     const admin = this.adminRepository.create({
       email: dto.email,
       password_hash: hashedPassword,
@@ -42,7 +39,6 @@ export class AuthService {
 
     await this.adminRepository.save(admin);
 
-    // Generar JWT
     const token = this.jwtService.sign({
       sub: admin.id,
       email: admin.email,
@@ -53,30 +49,36 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<{ access_token: string }> {
-    // Buscar admin
+    const cleanEmail = dto.email ? dto.email.trim().toLowerCase() : '';
+    console.log('👉 [AUTH] Intento de login recibido para:', cleanEmail);
+
     const admin = await this.adminRepository.findOne({
-      where: { email: dto.email },
+      where: { email: cleanEmail },
     });
 
     if (!admin) {
+      console.log('❌ [AUTH] Usuario NO encontrado en la BD:', cleanEmail);
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Verificar contraseña
+    console.log('✅ [AUTH] Usuario encontrado en BD:', admin.email);
+    console.log('🔒 [AUTH] Hash almacenado en BD:', admin.password_hash);
+
     const passwordValida = await bcrypt.compare(
       dto.password,
       admin.password_hash,
     );
 
+    console.log('🔑 [AUTH] Resultado comparacion Bcrypt:', passwordValida);
+
     if (!passwordValida) {
+      console.log('❌ [AUTH] Contraseña incorrecta para:', cleanEmail);
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    // Actualizar último login
     admin.last_login = new Date();
     await this.adminRepository.save(admin);
 
-    // Generar JWT
     const token = this.jwtService.sign({
       sub: admin.id,
       email: admin.email,

@@ -13,7 +13,7 @@ import { UpdateRestauranteDto } from './dto/update-restaurante.dto';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
-@Controller('api/restaurante')
+@Controller('restaurante')
 export class RestauranteController {
   constructor(private readonly restauranteService: RestauranteService) {}
 

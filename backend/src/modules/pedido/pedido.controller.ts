@@ -16,7 +16,7 @@ import { PedidoService } from './pedido.service';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
-@Controller('api/pedidos')
+@Controller('pedidos')
 export class PedidoController {
   constructor(private readonly pedidoService: PedidoService) {}
 

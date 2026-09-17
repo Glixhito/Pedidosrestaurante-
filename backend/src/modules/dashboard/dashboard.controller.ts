@@ -3,7 +3,7 @@ import { DashboardService } from './dashboard.service';
 import { JwtGuard } from '../../common/guards/jwt.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
-@Controller('api/dashboard')
+@Controller('dashboard')
 @UseGuards(JwtGuard)
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
