@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  JoinColumn, // 👈 Agregar import
 } from 'typeorm';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
 
@@ -40,5 +41,6 @@ export class Administrador {
   @ManyToOne(() => Restaurante, (rest) => rest.administradores, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'restaurante_id' }) // 👈 Especificar el nombre exacto de la columna en BD
   restaurante: Restaurante;
 }
