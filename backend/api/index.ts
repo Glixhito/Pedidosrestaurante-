@@ -11,10 +11,10 @@ export default async function handler(req: any, res: any) {
   if (!app) {
     app = await NestFactory.create(AppModule, { rawBody: true });
 
-    // 1. Establecer el prefijo 'api' nativo en NestJS
+    // 1. Establecer el prefijo global 'api' en NestJS
     app.setGlobalPrefix('api');
 
-    // 2. Habilitar CORS para el frontend
+    // 2. Habilitar CORS para permitir solicitudes desde Render y Vercel
     app.enableCors({
       origin: true,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -31,6 +31,12 @@ export default async function handler(req: any, res: any) {
     );
 
     await app.init();
+  }
+
+  // 🔄 REESCRITURA AUTOMÁTICA DE RUTAS EN VERCEL
+  // Si la petición no empieza con /api, le anteponemos /api para que coincida con setGlobalPrefix
+  if (req.url && !req.url.startsWith('/api')) {
+    req.url = `/api${req.url.startsWith('/') ? '' : '/'}${req.url}`;
   }
 
   const instance = app.getHttpAdapter().getInstance();
