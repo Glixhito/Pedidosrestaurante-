@@ -7,17 +7,19 @@ import { useCarritoStore } from '../../store/carritoStore'
 import Loading from '../../components/shared/Loading'
 import { ShoppingBag, Flame, Plus, Minus, X, ChevronRight, Utensils, Search, Check } from 'lucide-react'
 
-// ⚡ Conexión dinámica inteligente
+// ⚡ Conexión dinámica apta para Vercel Serverless
 const getSocketUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL;
   if (apiUrl) {
     return apiUrl.replace(/\/api\/?$/, '');
   }
-  return 'https://servicios-de-restaurante.onrender.com';
+  return 'http://localhost:4000';
 };
 
 const socket = io(getSocketUrl(), {
-  transports: ['websocket', 'polling'],
+  transports: ['polling'], // 👈 Fuerza HTTP polling para compatibilidad con Vercel
+  autoConnect: true,
+  reconnectionAttempts: 3,
 })
 
 export default function MenuPage() {
@@ -223,7 +225,7 @@ export default function MenuPage() {
           ))}
         </div>
 
-        {/* ============ GRID DE PRODUCTOS (MEJORADO) ============ */}
+        {/* ============ GRID DE PRODUCTOS ============ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           
           {productosFiltrados.length === 0 ? (
@@ -249,7 +251,6 @@ export default function MenuPage() {
                   onClick={() => openDetail(producto)}
                   className="bg-[#231a0d] border border-[#3a2a18] rounded-2xl overflow-hidden cursor-pointer hover:border-[#e8621a] transition-all duration-300 group flex flex-col shadow-lg hover:shadow-[0_8px_32px_rgba(232,98,26,0.2)] transform hover:-translate-y-1"
                 >
-                  {/* ========== IMAGEN CON OVERLAY ========== */}
                   <div className="relative h-56 overflow-hidden bg-[#1a1209]">
                     <img
                       src={producto.imagen_url || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=700&h=500&fit=crop&auto=format"}
@@ -257,10 +258,8 @@ export default function MenuPage() {
                       className="w-full h-full object-cover group-hover:scale-110 transition duration-500"
                     />
                     
-                    {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60 group-hover:via-black/40 transition duration-300" />
                     
-                    {/* Badges en esquina superior derecha */}
                     <div className="absolute top-3 right-3 flex flex-col gap-2">
                       <div className="bg-[#e8621a] text-white font-bold text-sm px-3 py-1.5 rounded-lg shadow-lg backdrop-blur-sm border border-orange-400/50">
                         {tienePorciones ? 'Desde ' : ''}{formatearPrecio(precioMin)}
@@ -270,7 +269,6 @@ export default function MenuPage() {
                       </div>
                     </div>
 
-                    {/* CTA flotante en hover */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#1a1209] to-transparent opacity-0 group-hover:opacity-100 transition duration-300 transform translate-y-2 group-hover:translate-y-0">
                       <button className="w-full bg-[#e8621a] hover:bg-orange-600 text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 shadow-lg">
                         <Plus size={16} /> Ver Detalles
@@ -278,9 +276,7 @@ export default function MenuPage() {
                     </div>
                   </div>
 
-                  {/* ========== CONTENIDO ========== */}
                   <div className="p-5 flex flex-col flex-1 space-y-3">
-                    {/* Nombre y descripción */}
                     <div>
                       <h3 className="font-serif font-bold text-lg text-[#f5ead8] group-hover:text-[#f0a030] transition line-clamp-2">
                         {producto.nombre}
@@ -290,7 +286,6 @@ export default function MenuPage() {
                       </p>
                     </div>
 
-                    {/* Características de porciones */}
                     {tienePorciones && (
                       <div className="flex flex-wrap gap-1.5">
                         {producto.porciones.slice(0, 2).map(p => (
@@ -306,7 +301,6 @@ export default function MenuPage() {
                       </div>
                     )}
 
-                    {/* Adiciones disponibles */}
                     {producto.adiciones && producto.adiciones.length > 0 && (
                       <div className="flex items-center gap-1.5 text-[11px] text-amber-300/80">
                         <span className="text-sm">🧀</span>
@@ -315,7 +309,6 @@ export default function MenuPage() {
                     )}
                   </div>
 
-                  {/* ========== PIE ========== */}
                   <div className="border-t border-[#3a2a18] p-4 flex items-center justify-between bg-[#1a1209]/50">
                     <div>
                       <p className="text-[10px] text-[#9c8a6e] uppercase font-bold tracking-wider">
@@ -354,7 +347,7 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* ============ MODAL DE DETALLE (MEJORADO) ============ */}
+      {/* ============ MODAL DE DETALLE ============ */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-[#231a0d] border border-[#3a2a18] w-full max-w-lg rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
@@ -373,7 +366,7 @@ export default function MenuPage() {
               <p className="text-xs md:text-sm text-[#9c8a6e] leading-relaxed mt-2">{selectedItem.descripcion || 'Preparado al carbón con los mejores cortes y sazón artesanal.'}</p>
             </div>
 
-            {/* ========== SELECTOR DE GRAMAJES (MEJORADO) ========== */}
+            {/* ========== SELECTOR DE GRAMAJES ========== */}
             {selectedItem.porciones && selectedItem.porciones.length > 0 && (
               <div className="space-y-3 bg-gradient-to-br from-[#1a1209] to-[#140e06] p-5 rounded-2xl border border-[#3a2a18] shadow-inner">
                 <div className="flex items-center gap-2 mb-3">
@@ -411,7 +404,7 @@ export default function MenuPage() {
               </div>
             )}
 
-            {/* ========== SELECTOR DE ADICIONES (MEJORADO) ========== */}
+            {/* ========== SELECTOR DE ADICIONES ========== */}
             {selectedItem.adiciones && selectedItem.adiciones.length > 0 && (
               <div className="space-y-3 bg-gradient-to-br from-[#1a1209] to-[#140e06] p-5 rounded-2xl border border-[#3a2a18] shadow-inner">
                 <div className="flex items-center gap-2 mb-3">
@@ -490,7 +483,7 @@ export default function MenuPage() {
         </div>
       )}
 
-      {/* ========== ESTILOS GLOBALES ========== */}
+      {/* ============ ESTILOS GLOBALES ============ */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
