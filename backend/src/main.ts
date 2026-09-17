@@ -1,42 +1,37 @@
-// 🇨🇴 Forzar zona horaria de Colombia en Vercel
+// 🇨🇴 Forzar zona horaria de Colombia en todo el servidor
 process.env.TZ = 'America/Bogota';
 
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { AppModule } from '../src/app.module';
+import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import { AppModule } from './app.module'; // 👈 Cambiado de '../src/app.module' a './app.module'
 
-let app: any;
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const configService = app.get(ConfigService);
 
-export default async function handler(req: any, res: any) {
-  if (!app) {
-    app = await NestFactory.create(AppModule, { rawBody: true });
+  app.use(helmet());
 
-    // Habilitar CORS para permitir solicitudes desde Render y Vercel
-    app.enableCors({
-      origin: true,
-      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      credentials: true,
-    });
+  // Prefijo global para coincidir con la arquitectura del frontend
+  app.setGlobalPrefix('api');
 
-    // PIPES DE VALIDACIÓN GLOBAL
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: false,
-        transform: true,
-      }),
-    );
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
-    await app.init();
-  }
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
+    }),
+  );
 
-  const instance = app.getHttpAdapter().getInstance();
-  
-  // 🔄 REESCRITURA DE RUTA PARA CONTROLADORES CON PREFIX 'api/'
-  // Permite responder a peticiones que vienen como /auth/login o /api/auth/login
-  if (req.url.startsWith('/auth') || req.url.startsWith('/categoria') || req.url.startsWith('/producto')) {
-    req.url = `/api${req.url}`;
-  }
-
-  instance(req, res);
+  const port = process.env.PORT || 4000;
+  await app.listen(port);
+  console.log(`\n🚀 Servidor ejecutándose en puerto ${port} (Hora sincronizada: Colombia)`);
 }
+bootstrap();
