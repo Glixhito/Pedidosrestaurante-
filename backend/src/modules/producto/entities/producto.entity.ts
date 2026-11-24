@@ -1,16 +1,17 @@
-import { 
-  Entity, 
-  PrimaryGeneratedColumn, 
-  Column, 
-  CreateDateColumn, 
-  UpdateDateColumn, 
-  ManyToOne, 
-  OneToMany, 
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
 import { Categoria } from '../../categoria/entities/categoria.entity';
 import { DetallePedido } from '../../pedido/entities/detalle-pedido.entity';
-import { ProductoPorcion } from './producto-porcion.entity'; 
+import { ProductoPorcion } from './producto-porcion.entity';
 import { ProductoAdicion } from './producto-adicion.entity';
 
 export enum EstadoProducto {
@@ -64,24 +65,24 @@ export class Producto {
   @ManyToOne(() => Restaurante, (rest) => rest.productos, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'restaurante_id' })
   restaurante: Restaurante;
 
   @ManyToOne(() => Categoria, (cat) => cat.productos, {
     onDelete: 'RESTRICT',
   })
+  @JoinColumn({ name: 'categoria_id' })
   categoria: Categoria;
 
   @OneToMany(() => DetallePedido, (det) => det.producto)
   detalles: DetallePedido[];
 
-  // 🥩 RELACIÓN DE GRAMAJES
   @OneToMany(() => ProductoPorcion, (porcion) => porcion.producto, {
     cascade: true,
     eager: true,
   })
   porciones: ProductoPorcion[];
 
-  // 🧀 RELACIÓN DE ADICIONES / TOPPINGS
   @OneToMany(() => ProductoAdicion, (adicion) => adicion.producto, {
     cascade: true,
     eager: true,

@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { PagoQR } from './pago-qr.entity';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
@@ -56,8 +57,10 @@ export class AuditoriaPago {
   timestamp: Date;
 
   @ManyToOne(() => Restaurante, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'restaurante_id' })
   restaurante: Restaurante;
 
   @ManyToOne(() => PagoQR, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'pago_qr_id' })
   pago_qr: PagoQR;
 }

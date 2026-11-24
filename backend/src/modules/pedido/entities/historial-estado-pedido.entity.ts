@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Pedido } from './pedido.entity';
 
@@ -42,5 +43,6 @@ export class HistorialEstadoPedido {
   @ManyToOne(() => Pedido, (pedido) => pedido.historial, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'pedido_id' })
   pedido: Pedido;
 }

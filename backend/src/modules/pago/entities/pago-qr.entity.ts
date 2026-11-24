@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Pedido } from '../../pedido/entities/pedido.entity';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
@@ -38,7 +39,11 @@ export class PagoQR {
   @Column({ type: 'enum', enum: TipoPagoQR })
   tipo_pago: TipoPagoQR;
 
-  @Column({ type: 'enum', enum: EstadoPagoQR, default: EstadoPagoQR.ESPERANDO_PAGO })
+  @Column({
+    type: 'enum',
+    enum: EstadoPagoQR,
+    default: EstadoPagoQR.ESPERANDO_PAGO,
+  })
   estado: EstadoPagoQR;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
@@ -90,8 +95,10 @@ export class PagoQR {
   updated_at: Date;
 
   @ManyToOne(() => Restaurante, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'restaurante_id' })
   restaurante: Restaurante;
 
   @OneToOne(() => Pedido, (pedido) => pedido.pago_qr)
+  @JoinColumn({ name: 'pedido_id' })
   pedido: Pedido;
 }

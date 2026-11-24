@@ -7,6 +7,7 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
 import { Cliente } from '../../cliente/entities/cliente.entity';
@@ -75,25 +76,26 @@ export class Pedido {
   @Column({ type: 'varchar', length: 255, nullable: true })
   razon_rechazo: string;
 
-  // ✅ CAMBIADO a 'timestamptz' para evitar desfases al leer desde Node.js
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  // ✅ CAMBIADO a 'timestamptz'
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   @ManyToOne(() => Restaurante, (rest) => rest.pedidos, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'restaurante_id' })
   restaurante: Restaurante;
 
   @ManyToOne(() => Cliente, (cliente) => cliente.pedidos, {
     onDelete: 'RESTRICT',
   })
+  @JoinColumn({ name: 'cliente_id' })
   cliente: Cliente;
 
   @ManyToOne(() => ZonaDomicilio, (zona) => zona.pedidos, { nullable: true })
+  @JoinColumn({ name: 'zona_domicilio_id' })
   zona: ZonaDomicilio;
 
   @OneToOne(() => PagoQR, (pagoQR) => pagoQR.pedido, { nullable: true })

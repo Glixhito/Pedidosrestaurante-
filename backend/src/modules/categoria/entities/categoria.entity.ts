@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
 import { Producto } from '../../producto/entities/producto.entity';
@@ -52,6 +53,7 @@ export class Categoria {
   @ManyToOne(() => Restaurante, (rest) => rest.categorias, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'restaurante_id' })
   restaurante: Restaurante;
 
   @OneToMany(() => Producto, (prod) => prod.categoria)

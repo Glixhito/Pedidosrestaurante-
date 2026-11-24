@@ -16,11 +16,11 @@ export class DetallePedido {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index() // 🚀 Optimiza la búsqueda de detalles por pedido
+  @Index()
   @Column({ type: 'uuid' })
   pedido_id: string;
 
-  @Index() // 🚀 Optimiza estadísticas por producto
+  @Index()
   @Column({ type: 'uuid' })
   producto_id: string;
 
@@ -33,7 +33,6 @@ export class DetallePedido {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   precio_unitario_en_momento: number;
 
-  // 🧀 NUEVO: Guarda la fotografía exacta de las adiciones elegidas y su precio al momento de comprar
   @Column({ type: 'jsonb', nullable: true })
   adiciones_seleccionadas: Array<{
     id?: string;
@@ -47,6 +46,7 @@ export class DetallePedido {
   @ManyToOne(() => Pedido, (pedido) => pedido.detalles, {
     onDelete: 'CASCADE',
   })
+  @JoinColumn({ name: 'pedido_id' })
   pedido: Pedido;
 
   @ManyToOne(() => Producto, (producto) => producto.detalles, {
@@ -64,10 +64,12 @@ export class DetallePedido {
 
   get subtotal(): number {
     const precioBase = Number(this.precio_unitario_en_momento) || 0;
-    
-    // Sumamos el precio de las adiciones si existen en el snapshot
+
     const totalAdiciones = Array.isArray(this.adiciones_seleccionadas)
-      ? this.adiciones_seleccionadas.reduce((sum, ad) => sum + (Number(ad.precio) || 0), 0)
+      ? this.adiciones_seleccionadas.reduce(
+          (sum, ad) => sum + (Number(ad.precio) || 0),
+          0,
+        )
       : 0;
 
     return (precioBase + totalAdiciones) * this.cantidad;
