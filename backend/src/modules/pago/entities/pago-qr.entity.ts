@@ -98,7 +98,7 @@ export class PagoQR {
   @JoinColumn({ name: 'restaurante_id' })
   restaurante: Restaurante;
 
-  @OneToOne(() => Pedido, (pedido) => pedido.pago_qr)
+  @OneToOne(() => Pedido, (pedido) => pedido.pago_qr, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'pedido_id' })
   pedido: Pedido;
 }

@@ -7,6 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Pedido } from './pedido.entity';
+import { Administrador } from '../../auth/entities/administrador.entity';
 
 export enum EstadoPedidoEnum {
   PENDIENTE = 'PENDIENTE',
@@ -45,4 +46,11 @@ export class HistorialEstadoPedido {
   })
   @JoinColumn({ name: 'pedido_id' })
   pedido: Pedido;
+
+  @ManyToOne(() => Administrador, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'admin_id' })
+  admin: Administrador;
 }
