@@ -1,6 +1,6 @@
-import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { DataSource } from 'typeorm';
+import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 
 import { Restaurante } from '../modules/restaurante/entities/restaurante.entity';
@@ -19,7 +19,8 @@ import { Administrador } from '../modules/auth/entities/administrador.entity';
 
 dotenv.config();
 
-// Arreglo global de entidades
+type EnvGetter = (key: string) => string | undefined;
+
 const entities = [
   Restaurante,
   Categoria,
@@ -36,57 +37,57 @@ const entities = [
   Administrador,
 ];
 
-// 1. CONFIGURACIÓN PARA NESTJS (Usada por app.module.ts)
-export const getTypeOrmConfig = (
-  configService: ConfigService,
-): TypeOrmModuleOptions => {
-  const isProduction = configService.get<string>('NODE_ENV') === 'production';
-  const dbUrl = configService.get<string>('DATABASE_URL_POOLED') || configService.get<string>('DATABASE_URL');
-  const enableSsl = isProduction || configService.get<string>('DATABASE_SSL') === 'true';
+// Única fuente de la configuración de conexión, usada por NestJS, CLI y seeds
+const buildConnection = (get: EnvGetter): DataSourceOptions => {
+  const isProduction = get('NODE_ENV') === 'production';
+  const useSsl = isProduction || get('DATABASE_SSL') === 'true';
+
+  // La URL solo se usa en producción. En local siempre se usan las variables
+  // individuales, para que nunca se conecte a la base real por accidente.
+  const url = isProduction
+    ? get('DATABASE_URL_POOLED') || get('DATABASE_URL')
+    : undefined;
+
+  // Si se define el certificado de Layer Base, se verifica la conexión.
+  // Sin certificado, se cifra pero no se verifica el servidor.
+  const caPem = get('DATABASE_SSL_CA');
+  const ssl = useSsl
+    ? caPem
+      ? { ca: caPem.replace(/\\n/g, '\n'), rejectUnauthorized: true }
+      : { rejectUnauthorized: false }
+    : false;
+
+  const base = {
+    type: 'postgres' as const,
+    entities,
+    migrations: [isProduction ? 'dist/migrations/*.js' : 'src/migrations/*.ts'],
+    synchronize: false,
+    migrationsRun: false,
+    logging: !isProduction,
+    ssl,
+  };
+
+  if (url) {
+    return { ...base, url };
+  }
 
   return {
-    type: 'postgres',
-    ...(dbUrl
-      ? {
-          url: dbUrl,
-          ssl: enableSsl ? { rejectUnauthorized: false } : false,
-        }
-      : {
-          host: configService.get<string>('DATABASE_HOST') || 'localhost',
-          port: parseInt(configService.get<string>('DATABASE_PORT') || '5432', 10),
-          username: configService.get<string>('DATABASE_USER') || 'postgres',
-          password: configService.get<string>('DATABASE_PASSWORD') || 'postgres',
-          database: configService.get<string>('DATABASE_NAME') || 'restaurante_pedidos_db',
-          ssl: enableSsl ? { rejectUnauthorized: false } : false,
-        }),
-    entities,
-    synchronize: true,
-    logging: !isProduction,
+    ...base,
+    host: get('DATABASE_HOST') || 'localhost',
+    port: parseInt(get('DATABASE_PORT') || '5432', 10),
+    username: get('DATABASE_USER') || 'postgres',
+    password: get('DATABASE_PASSWORD') || 'postgres',
+    database: get('DATABASE_NAME') || 'restaurante_pedidos_db',
   };
 };
 
-// 2. CONFIGURACIÓN PARA TYPEORM CLI Y MIGRACIONES
-const isProductionDS = process.env.NODE_ENV === 'production';
-const dbUrlDS = process.env.DATABASE_URL_POOLED || process.env.DATABASE_URL;
-const enableSslDS = isProductionDS || process.env.DATABASE_SSL === 'true';
+// 1. Para NestJS (app.module.ts)
+export const getTypeOrmConfig = (
+  configService: ConfigService,
+): TypeOrmModuleOptions =>
+  buildConnection((key) => configService.get<string>(key));
 
-export const AppDataSource = new DataSource({
-  type: 'postgres',
-  ...(dbUrlDS
-    ? {
-        url: dbUrlDS,
-        ssl: enableSslDS ? { rejectUnauthorized: false } : false,
-      }
-    : {
-        host: process.env.DATABASE_HOST || 'localhost',
-        port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-        username: process.env.DATABASE_USER || 'postgres',
-        password: process.env.DATABASE_PASSWORD || 'postgres',
-        database: process.env.DATABASE_NAME || 'restaurante_pedidos_db',
-        ssl: enableSslDS ? { rejectUnauthorized: false } : false,
-      }),
-  entities,
-  migrations: ['src/migrations/*.ts'],
-  synchronize: true,
-  logging: !isProductionDS,
-});
+// 2. Para TypeORM CLI, seeds y migraciones
+export const AppDataSource = new DataSource(
+  buildConnection((key) => process.env[key]),
+);
