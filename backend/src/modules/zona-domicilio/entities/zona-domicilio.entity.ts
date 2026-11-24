@@ -7,11 +7,13 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { Restaurante } from '../../restaurante/entities/restaurante.entity';
 import { Pedido } from '../../pedido/entities/pedido.entity';
 
 @Entity('zona_domicilio')
+@Unique('uq_zona_domicilio_restaurante_nombre', ['restaurante_id', 'nombre'])
 export class ZonaDomicilio {
   @PrimaryGeneratedColumn('uuid')
   id: string;
