@@ -28,10 +28,10 @@ export class Cliente {
   @Column({ type: 'boolean', default: true })
   primera_vez: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   @ManyToOne(() => Restaurante, { onDelete: 'CASCADE' })

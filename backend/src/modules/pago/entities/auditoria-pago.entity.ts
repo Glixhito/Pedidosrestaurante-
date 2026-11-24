@@ -53,7 +53,7 @@ export class AuditoriaPago {
   @Column({ type: 'boolean', default: false })
   exitoso: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   timestamp: Date;
 
   @ManyToOne(() => Restaurante, { onDelete: 'CASCADE' })

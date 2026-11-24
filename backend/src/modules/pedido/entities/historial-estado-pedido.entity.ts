@@ -38,7 +38,7 @@ export class HistorialEstadoPedido {
   @Column({ type: 'uuid', nullable: true })
   admin_id: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @ManyToOne(() => Pedido, (pedido) => pedido.historial, {

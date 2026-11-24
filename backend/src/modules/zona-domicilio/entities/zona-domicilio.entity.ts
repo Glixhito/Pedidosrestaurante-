@@ -28,10 +28,10 @@ export class ZonaDomicilio {
   @Column({ type: 'boolean', default: true })
   activa: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   @ManyToOne(() => Restaurante, (rest) => rest.zonas, {

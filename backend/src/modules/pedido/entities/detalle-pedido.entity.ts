@@ -40,7 +40,7 @@ export class DetallePedido {
     precio: number;
   }>;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @ManyToOne(() => Pedido, (pedido) => pedido.detalles, {

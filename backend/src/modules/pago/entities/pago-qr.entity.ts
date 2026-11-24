@@ -64,13 +64,13 @@ export class PagoQR {
   @Column({ type: 'varchar', nullable: true })
   id_transaccion_nequi: string;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   timestamp_creacion: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   timestamp_pago: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   timestamp_confirmacion: Date;
 
   @Column({ type: 'int', default: 0 })
@@ -88,10 +88,10 @@ export class PagoQR {
   @Column({ type: 'varchar', nullable: true })
   user_agent: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   @ManyToOne(() => Restaurante, { onDelete: 'CASCADE' })
